@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use locale;
 
-our $VERSION = "0.9";
+our $VERSION = "0.91";
 
 =head1 NAME
 
@@ -272,8 +272,8 @@ as an option "match all words".
 
 The return value has following structure :
 
-  { '+' => [{field=>'f1', op=>':', value=>'v1'}, 
-            {field=>'f2', op=>':', value=>'v2'}, ...],
+  { '+' => [{field=>'f1', op=>':', value=>'v1', quote=>'q1'}, 
+            {field=>'f2', op=>':', value=>'v2', quote=>'q2'}, ...],
     ''  => [...],
     '-' => [...]
   }
@@ -295,6 +295,10 @@ scalar, field name (may be the empty string)
 
 scalar, operator
 
+=item C<quote>
+
+scalar, character that was used for quoting the value ('"', "'" or undef)
+
 =item C<value> 
 
 Either
@@ -304,11 +308,6 @@ Either
 =item *
 
 a scalar (simple term), or
-
-=item *
-
-an array ref (list of terms, corresponding to an "exact phrase"
-in the query), or
 
 =item *
 
@@ -367,14 +366,17 @@ LOOP :
       # parse a value (single term or quoted list or parens)
       my $subQ = undef;
 
-      if (s/^"([^"]*?)"\s*// or 
-	  s/^'([^']*?)'\s*//) { # parse a quoted string. 
-	my $val = $1;
-	if ($op eq ':') {
-	  my @lst = ($val =~ /$self->{rxTerm}/g); # split into a list of terms
-	  $val = (@lst > 1) ? \@lst : (@lst > 0) ? $lst[0] : '';
-	}
-	$subQ = {field=>$field, op=>$op, value=>$val};
+      if (s/^(")([^"]*?)"\s*// or 
+	  s/^(')([^']*?)'\s*//) { # parse a quoted string. 
+	my ($quote, $val) = ($1, $2);
+
+# Dropped 25.05.2005
+# 	if ($op eq ':') {
+# 	  my @lst = ($val =~ /$self->{rxTerm}/g); # split into a list of terms
+# 	  $val = (@lst > 1) ? \@lst : (@lst > 0) ? $lst[0] : '';
+# 	}
+
+	$subQ = {field=>$field, op=>$op, value=>$val, quote=>$quote};
       }
       elsif (s/^\(\s*//) { # parse parentheses 
 	my ($r, $s2) = $self->_parse($s, $implicitPlus, $field, $op);
@@ -457,9 +459,8 @@ sub unparse_subQ {
   my $subQ = shift;
 
   return  "(" . $self->unparse($subQ->{value}) . ")"  if $subQ->{op} eq '()';
-
-  my $val = ref $subQ->{value} ? join(" ", @{$subQ->{value}}) : $subQ->{value};
-  return "$subQ->{field}$subQ->{op}\"$val\"";
+  my $quote = $subQ->{quote} || "";
+  return "$subQ->{field}$subQ->{op}$quote$subQ->{value}$quote";
 }
 
 =back
