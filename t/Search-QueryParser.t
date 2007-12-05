@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 BEGIN { use_ok('Search::QueryParser') };
 
@@ -24,4 +24,9 @@ is($qp->unparse($q),
 $q = $qp->parse("a AND (b OR c) AND NOT d");
 is($qp->unparse($q), 
    '+:a +(:b :c) -:d');
+
+# '#' operator
+$q = $qp->parse("+foo#12,34,567,890,1000 +bar#9876 #54321");
+is($qp->unparse($q), 
+   "+foo#12,34,567,890,1000 +bar#9876 #54321");
 

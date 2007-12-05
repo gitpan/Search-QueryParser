@@ -1,10 +1,12 @@
 Revision history for Perl extension Search::QueryParser.
 
-0.9  Fri Dec 31 17:54:02 2004
-	- original version; created by h2xs 1.23 with options
-		-AX -n Search::QueryParser
+0.92 04.12.2007
+  - added '#' operator (for matching against sets of integers)        
 
 0.91 25.05.2005 
-	- quoted "exact phrases" are no longer parsed as arrays (was not
-          useful)
+  - quoted "exact phrases" are no longer parsed as arrays (was not
+    useful)
+
+
+
         

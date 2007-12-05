@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use locale;
 
-our $VERSION = "0.91";
+our $VERSION = "0.92";
 
 =head1 NAME
 
@@ -23,6 +23,10 @@ suitable for external search engines
 
   # boolean operators (example below is equivalent to "+a +(b c) -d")
   $query = $qp->parse("a AND (b OR c) AND NOT d");
+
+  # subset of rows
+  $query = $qp->parse("Id#123,444,555,666 AND (b OR c)");
+
 
 =head1 DESCRIPTION
 
@@ -106,9 +110,15 @@ negation of above
 
 classical relational operators
 
+=item C<#>
+
+Inclusion in the set of comma-separated integers supplied
+on the right-hand side. 
+
+
 =back
 
-Operators C<:>, C<~>, C<=~> and C<!~> admit an empty 
+Operators C<:>, C<~>, C<=~>, C<!~> and C<#> admit an empty 
 left operand (so the field name will be C<''>).
 Search engines will usually interpret this as 
 "any field" or "the whole data record".
@@ -180,8 +190,8 @@ use constant DEFAULT => {
   rxTerm      => qr/[^\s()]+/,
   rxField     => qr/\w+/,
 
-  rxOp        => qr/==|<=|>=|!=|=~|!~|:|=|<|>|~/, # longest ops first !
-  rxOpNoField => qr/=~|!~|~|:/, # ops that admit an empty left operand
+  rxOp        => qr/==|<=|>=|!=|=~|!~|[:=<>~#]/, # longest ops first !
+  rxOpNoField => qr/=~|!~|[~:#]/, # ops that admit an empty left operand
 
   rxAnd       => qr/AND|ET|UND|E/,
   rxOr        => qr/OR|OU|ODER|O/,
@@ -369,13 +379,6 @@ LOOP :
       if (s/^(")([^"]*?)"\s*// or 
 	  s/^(')([^']*?)'\s*//) { # parse a quoted string. 
 	my ($quote, $val) = ($1, $2);
-
-# Dropped 25.05.2005
-# 	if ($op eq ':') {
-# 	  my @lst = ($val =~ /$self->{rxTerm}/g); # split into a list of terms
-# 	  $val = (@lst > 1) ? \@lst : (@lst > 0) ? $lst[0] : '';
-# 	}
-
 	$subQ = {field=>$field, op=>$op, value=>$val, quote=>$quote};
       }
       elsif (s/^\(\s*//) { # parse parentheses 
@@ -471,7 +474,7 @@ Laurent Dami, E<lt>laurent.dami AT etat ge chE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2005 by Laurent Dami.
+Copyright (C) 2005, 2007 by Laurent Dami.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. 
