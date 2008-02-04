@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 9;
 
 BEGIN { use_ok('Search::QueryParser') };
 
@@ -30,3 +30,11 @@ $q = $qp->parse("+foo#12,34,567,890,1000 +bar#9876 #54321");
 is($qp->unparse($q), 
    "+foo#12,34,567,890,1000 +bar#9876 #54321");
 
+# boolean operators
+$q = $qp->parse("Prince Edward"); # test bug RT#32840
+is($qp->unparse($q), 
+   ':Prince :Edward');
+
+$q = $qp->parse("a E(b)");
+is($qp->unparse($q), 
+   '+:a +(:b)');

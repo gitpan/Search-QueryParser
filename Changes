@@ -1,5 +1,8 @@
 Revision history for Perl extension Search::QueryParser.
 
+0.93 04.02.2008
+  - fix RT#32840 (word boolean connectors) - thanks Frank Wesemann
+
 0.92 04.12.2007
   - added '#' operator (for matching against sets of integers)        
 

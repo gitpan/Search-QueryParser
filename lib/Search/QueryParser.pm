@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use locale;
 
-our $VERSION = "0.92";
+our $VERSION = "0.93";
 
 =head1 NAME
 
@@ -362,8 +362,8 @@ LOOP :
       last LOOP if m/^\)/; # return from recursive call if meeting a ')'
 
       # try to parse sign prefix ('+', '-' or 'NOT')
-      if    (s/^(\+|-)\s*//)           { $sign = $1;  }
-      elsif (s/^($self->{rxNot})\s*//) { $sign = '-'; }
+      if    (s/^(\+|-)\s*//)             { $sign = $1;  }
+      elsif (s/^($self->{rxNot})\b\s*//) { $sign = '-'; }
 
       # try to parse field name and operator
       if (s/^($self->{rxField})\s*($self->{rxOp})\s*// # field name and op
@@ -394,8 +394,8 @@ LOOP :
 
       # deal with boolean connectors
       my $postBool = '';
-      if    (s/^($self->{rxAnd})\s*//) { $postBool = 'AND' }
-      elsif (s/^($self->{rxOr})\s*//)  { $postBool = 'OR'  }
+      if    (s/^($self->{rxAnd})\b\s*//) { $postBool = 'AND' }
+      elsif (s/^($self->{rxOr})\b\s*//)  { $postBool = 'OR'  }
       $err = "cannot mix AND/OR in requests; use parentheses", last LOOP
 	if $preBool and $postBool and $preBool ne $postBool;
       my $bool = $preBool || $postBool;

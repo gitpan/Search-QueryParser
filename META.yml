@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Search-QueryParser
-version:             0.92
+version:             0.93
 abstract:            parses a query string into a data structure
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.3201
