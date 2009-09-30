@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 14;
 
 BEGIN { use_ok('Search::QueryParser') };
 
@@ -38,3 +38,22 @@ is($qp->unparse($q),
 $q = $qp->parse("a E(b)");
 is($qp->unparse($q), 
    '+:a +(:b)');
+
+# quoted field
+$q = $qp->parse(q{"LastEdit">"2009-01-01" 'FirstEdit'<"2008-01-01"}); 
+is($qp->unparse($q), 
+   q{LastEdit>"2009-01-01" FirstEdit<"2008-01-01"}); 
+
+# default field
+$qp = new Search::QueryParser(defField => 'def');
+$q = $qp->parse("foo +bar -buz");
+is($qp->unparse($q), 
+   '+def:bar def:foo -def:buz');
+
+$q = $qp->parse("foo:foo bar buz:(boo bing)");
+is($qp->unparse($q), 
+   'foo:foo def:bar (buz:boo buz:bing)');
+
+$q = $qp->parse("foo:(bar:buz)");
+ok(!$q, 'parse error');
+like($qp->err, qr/'bar' inside 'foo'/, 'parse error');

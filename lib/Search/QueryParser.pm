@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use locale;
 
-our $VERSION = "0.93";
+our $VERSION = "0.94";
 
 =head1 NAME
 
@@ -195,7 +195,9 @@ use constant DEFAULT => {
 
   rxAnd       => qr/AND|ET|UND|E/,
   rxOr        => qr/OR|OU|ODER|O/,
-  rxNot       => qr/NOT|PAS|NICHT|NON/
+  rxNot       => qr/NOT|PAS|NICHT|NON/,
+
+  defField    => "",
 };
 
 =item new
@@ -254,6 +256,11 @@ Default value is C<qr/OR|OU|ODER|O/>.
 Regular expression for boolean connector NOT.
 Default value is C<qr/NOT|PAS|NICHT|NON/>.
 
+=item defField
+
+If no field is specified in the query, use I<defField>.
+The default is the empty string "".
+
 =back
 
 =cut
@@ -265,7 +272,7 @@ sub new {
   # create object with default values
   my $self = bless {}, $class;
   $self->{$_} = $args->{$_} || DEFAULT->{$_} 
-    foreach qw(rxTerm rxField rxOp rxOpNoField rxAnd rxOr rxNot);
+    foreach qw(rxTerm rxField rxOp rxOpNoField rxAnd rxOr rxNot defField);
   return $self;
 }
 
@@ -356,7 +363,7 @@ LOOP :
   while ($s) { # while query string is not empty
     for ($s) { # temporary alias to $_ for easier regex application
       my $sign = $implicitPlus ? "+" : "";
-      my $field = $parentField || "";
+      my $field = $parentField || $self->{defField};
       my $op = $parentOp || ":";
 
       last LOOP if m/^\)/; # return from recursive call if meeting a ')'
@@ -366,8 +373,12 @@ LOOP :
       elsif (s/^($self->{rxNot})\b\s*//) { $sign = '-'; }
 
       # try to parse field name and operator
-      if (s/^($self->{rxField})\s*($self->{rxOp})\s*// # field name and op
-	  or                                           # or
+      if (s/^"($self->{rxField})"\s*($self->{rxOp})\s*// # "field name" and op
+          or 
+          s/^'($self->{rxField})'\s*($self->{rxOp})\s*// # 'field name' and op
+          or 
+          s/^($self->{rxField})\s*($self->{rxOp})\s*//   # field name and op
+	  or
 	  s/^()($self->{rxOpNoField})\s*//) {          # no field, just op
       	$err = "field '$1' inside '$parentField'", last LOOP if $parentField;
 	($field, $op) = ($1, $2); 
